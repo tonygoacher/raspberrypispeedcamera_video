@@ -13,7 +13,7 @@ rxIndex = 0
 commandBuffer = bytearray(40)
 speed = '00'
 
-print(ser.name)
+print("Using serial port " + ser.name)
 
 
 class RxState(Enum):
@@ -55,7 +55,7 @@ def ReadCommand(timeoutValue):
 	state = RxState.GET_HEADER
 	checksum = 0
 	expectedLength = 0;
-
+	print(' TImeout value is ' + str(timeout))
 	while timeout != 0:
 		x =ser.read()
 		if(len(x)):
@@ -102,7 +102,7 @@ def ReadCommand(timeoutValue):
 						print(commandBuffer.hex())
 						state = RxState.GET_HEADER
 		timeout -= 1
-	print('Timed out')
+	print('Timed out ' + str(timeout))
 	return CommsResult.TIMEOUT
 
 					
@@ -134,7 +134,7 @@ while True:
 
 	result = CommsResult.TIMEOUT
 	if(cameraState == CameraState.IDLE):
-		result = ReadCommand(100)
+		result = ReadCommand(1000)
 		if(result == CommsResult.START_RECORDING):
 			
 			cameraState = CameraState.RECORDING
@@ -146,20 +146,24 @@ while True:
 
 			
 	if(cameraState == CameraState.RECORDING):
-		result = ReadCommand(5)		# Max time is 5 seconds
+		result = ReadCommand(10)		# Max time is 10 seconds
 		print('Got ', result)
-		camera.stop_recording()
+		
 		if(result == CommsResult.TIMEOUT):
+			camera.stop_recording()
 			print('Timed out awaiting recording result')
 			deleteVideo(fileTempPath+filename)
 
 		if(result == CommsResult.END_RECORDING):
-			print('End recording command rexd')
+			camera.stop_recording()
+			print('End recording command')
 			deleteVideo(fileTempPath+filename)
 
 		if(result == CommsResult.SAVE_VIDEO):
 			print('Keep video command')
 			print(speed)
+			time.sleep(3) # This many seconds onto the end of the video
+			camera.stop_recording()
 			shutil.move(fileTempPath+ filename, fileFinalPath+filename+"_Speed"+speed+".h264")
 			
 		cameraState = CameraState.IDLE
