@@ -1,3 +1,4 @@
+#!/bin/python3
 # CarSpeed Version 2.0
 
 # import the necessary packages
@@ -8,6 +9,8 @@ import math
 import datetime
 import cv2
 import serial
+import os
+import sys
 
 # Initialise the serial port
 ser = serial.Serial('/dev/ttyS0',115200, timeout=0.1)
@@ -174,7 +177,14 @@ else:
 
 prompt = "Define the monitored area - press 'c' to continue" 
 prompt_on_image(prompt)
- 
+
+setup_exist = os.path.isfile("setup.txt")
+
+
+        
+if len(sys.argv) > 1 and (sys.argv[1] == 'S' or sys.argv[1] == 's'):
+    setup_exists  = False
+    
 # wait while the user draws the monitored area's boundry
 while not setup_complete:
     cv2.imshow("Speed Camera",image)
@@ -183,7 +193,7 @@ while not setup_complete:
     key = cv2.waitKey(1) & 0xFF
   
     # if the `c` key is pressed, break from the loop
-    if key == ord("c"):
+    if key == ord("c") or setup_exist:
         break
 
 # the monitored area is defined, time to move on
@@ -191,7 +201,23 @@ prompt = "Press 'q' to quit"
  
 # since the monitored area's bounding box could be drawn starting 
 # from any corner, normalize the coordinates
- 
+if setup_exist:
+    with open("setup.txt", 'r') as f:
+        setup_txt = f.readlines()
+        f.close
+        for line in setup_txt:
+            line = line.strip()
+            line = line.split("=")
+            if line[0] == "ix":
+                ix = int(line[1])
+            if line[0] == "iy":
+                iy = int(line[1])
+            if line[0] == "fx":
+                fx = int(line[1])
+            if line[0] == "fy":
+                fy = int(line[1])
+           
+     
 if fx > ix:
     upper_left_x = ix
     lower_right_x = fx
@@ -205,10 +231,20 @@ if fy > iy:
 else:
     upper_left_y = fy
     lower_right_y = iy
+    
+   
      
 monitored_width = lower_right_x - upper_left_x
 monitored_height = lower_right_y - upper_left_y
- 
+
+if (monitored_width > 10 and monitored_height > 10):
+    with open("setup.txt", 'w') as f:
+        f.write("ix="+str(upper_left_x)+"\n")
+        f.write("iy="+str(upper_left_y)+"\n")
+        f.write("fx="+str(lower_right_x)+"\n")
+        f.write("fy="+str(lower_right_y)+"\n")
+        f.close
+        
 print("Monitored area:")
 print(" upper_left_x {}".format(upper_left_x))
 print(" upper_left_y {}".format(upper_left_y))
