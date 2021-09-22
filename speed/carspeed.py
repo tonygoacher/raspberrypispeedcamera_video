@@ -12,6 +12,9 @@ import serial
 import os
 import sys
 
+os.environ.setdefault('DISPLAY', ':0')
+
+
 # Initialise the serial port
 ser = serial.Serial('/dev/ttyS0',115200, timeout=0.1)
 
@@ -170,7 +173,7 @@ rawCapture.truncate(0)
 org_image = image.copy()
 
 if SAVE_CSV:
-    csvfileout = "carspeed_{}.cvs".format(datetime.datetime.now().strftime("%Y%m%d_%H%M"))
+    csvfileout = "/home/pi/speedData/carspeed_{}.csv".format(datetime.datetime.now().strftime("%Y%m%d_%H%M"))
     record_speed('Date,Day,Time,Speed,Image')
 else:
     csvfileout = ''
@@ -183,7 +186,7 @@ setup_exist = os.path.isfile("setup.txt")
 
         
 if len(sys.argv) > 1 and (sys.argv[1] == 'S' or sys.argv[1] == 's'):
-    setup_exists  = False
+    setup_exist = False
     
 # wait while the user draws the monitored area's boundry
 while not setup_complete:
