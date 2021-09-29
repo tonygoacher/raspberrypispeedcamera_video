@@ -89,6 +89,7 @@ def draw_rectangle(event,x,y,flags,param):
 # define some constants
 DISTANCE = 76  #<---- enter your distance-to-road value here
 MIN_SPEED = 25 #<---- enter the minimum speed for saving images
+MAX_SPEED = 70 # < Ignore any speed greater than this
 SAVE_CSV = True #<---- record the results in .csv format in carspeed_(date).csv
 
 THRESHOLD = 15
@@ -356,7 +357,7 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
                 if ((x <= 2) and (direction == RIGHT_TO_LEFT)) \
                         or ((x+w >= monitored_width - 2) \
                         and (direction == LEFT_TO_RIGHT)):
-                    if (last_mph > MIN_SPEED):    # save the image
+                    if (last_mph > MIN_SPEED and last_mph <= MAX_SPEED):    # save the image
                         
                         # timestamp the image
                         cv2.putText(image, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"),
