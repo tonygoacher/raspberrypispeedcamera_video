@@ -88,7 +88,8 @@ def draw_rectangle(event,x,y,flags,param):
         
 # define some constants
 DISTANCE = 76  #<---- enter your distance-to-road value here
-MIN_SPEED = 25 #<---- enter the minimum speed for saving images
+LOG_SPEED = 25 # Log to CSV anything above this speed
+MIN_SPEED = 35 #Save image and video of anything above this speed
 MAX_SPEED = 70 # < Ignore any speed greater than this
 SAVE_CSV = True #<---- record the results in .csv format in carspeed_(date).csv
 
@@ -155,6 +156,9 @@ camera.framerate = FPS
 camera.vflip = True
 camera.hflip = True
 camera.rotation=180
+camera.awb_mode='auto'
+camera.exposure_mode='auto'
+
 
 rawCapture = PiRGBArray(camera, size=camera.resolution)
 # allow the camera to warm up
@@ -357,24 +361,26 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
                 if ((x <= 2) and (direction == RIGHT_TO_LEFT)) \
                         or ((x+w >= monitored_width - 2) \
                         and (direction == LEFT_TO_RIGHT)):
-                    if (last_mph > MIN_SPEED and last_mph <= MAX_SPEED):    # save the image
-                        
-                        # timestamp the image
-                        cv2.putText(image, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"),
-                            (10, image.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 1)
-                        # write the speed: first get the size of the text
-                        size, base = cv2.getTextSize( "%.0f mph" % last_mph, cv2.FONT_HERSHEY_SIMPLEX, 2, 3)
-                        # then center it horizontally on the image
-                        cntr_x = int((IMAGEWIDTH - size[0]) / 2) 
-                        cv2.putText(image, "%.0f mph" % last_mph,
-                            (cntr_x , int(IMAGEHEIGHT * 0.2)), cv2.FONT_HERSHEY_SIMPLEX, 2.00, (0, 255, 0), 3)
-                        # and save the image to disksaving
-                        imageFilename = "car_at_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + str(round(last_mph))
-                        # use the following image file name if you want to be able to sort the images by speed
-                        #imageFilename = "car_at_%02.0f" % last_mph + "_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + ".jpg"
-                        save_video(imageFilename)
-                        imageFilename +=  ".jpg"
-                        cv2.imwrite('/home/pi/speedData/' + imageFilename,image)
+                    if (last_mph >= LOG_SPEED and last_mph <= MAX_SPEED):    # sAt least write to CSV
+                        imageFilename="na"
+                        if (last_mph >= MIN_SPEED): 
+                            # timestamp the image
+                            cv2.putText(image, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"),
+                                (10, image.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 1)
+                            # write the speed: first get the size of the text
+                            size, base = cv2.getTextSize( "%.0f mph" % last_mph, cv2.FONT_HERSHEY_SIMPLEX, 2, 3)
+                            # then center it horizontally on the image
+                            cntr_x = int((IMAGEWIDTH - size[0]) / 2) 
+                            cv2.putText(image, "%.0f mph" % last_mph,
+                                (cntr_x , int(IMAGEHEIGHT * 0.2)), cv2.FONT_HERSHEY_SIMPLEX, 2.00, (0, 255, 0), 3)
+                            # and save the image to disksaving
+                            imageFilename = "car_at_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + str(round(last_mph))
+                            # use the following image file name if you want to be able to sort the images by speed
+                            #imageFilename = "car_at_%02.0f" % last_mph + "_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + ".jpg"
+                            save_video(imageFilename)
+                            imageFilename +=  ".jpg"
+                            cv2.imwrite('/home/pi/speedData/' + imageFilename,image)
+                            
                         if SAVE_CSV:
                             cap_time = datetime.datetime.now()
                             record_speed(cap_time.strftime("%Y.%m.%d")+','+cap_time.strftime('%A')+','+\
