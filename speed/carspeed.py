@@ -87,13 +87,13 @@ def draw_rectangle(event,x,y,flags,param):
         cv2.rectangle(image,(ix,iy),(fx,fy),(0,255,0),2)
         
 # define some constants
-DISTANCE = 76  #<---- enter your distance-to-road value here
-LOG_SPEED = 25 # Log to CSV anything above this speed
-MIN_SPEED = 35 #Save image and video of anything above this speed
+DISTANCE = 29  #<---- enter your distance-to-road value here
+LOG_SPEED = 20 # Log to CSV anything above this speed
+MIN_SPEED = 21 #Save image and video of anything above this speed
 MAX_SPEED = 70 # < Ignore any speed greater than this
 SAVE_CSV = True #<---- record the results in .csv format in carspeed_(date).csv
 
-THRESHOLD = 15
+THRESHOLD = 30
 MIN_AREA = 175
 BLURSIZE = (15,15)
 IMAGEWIDTH = 640
